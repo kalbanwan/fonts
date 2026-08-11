@@ -5,24 +5,20 @@ const path = require('path');
 const app = express();
 app.use(cors({ origin: '*' }));
 
-// Serve files from 'oun' at /fonts
-const ounDir = path.join(__dirname, 'oun');
-app.use('/fonts', express.static(ounDir, {
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.ttf')) res.setHeader('Content-Type', 'font/ttf');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-  }
-}));
+function setFontHeaders(res, filePath) {
+  if (filePath.endsWith('.ttf')) res.setHeader('Content-Type', 'font/ttf');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+}
 
-// Serve KFGQPC folder at /KFGQPC so existing URLs keep working
-const kfgDir = path.join(__dirname, 'KFGQPC');
-app.use('/KFGQPC', express.static(kfgDir, {
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.ttf')) res.setHeader('Content-Type', 'font/ttf');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-  }
-}));
+// Try serving fonts from both possible locations
+app.use('/fonts', express.static(path.join(__dirname, 'oun'), { setHeaders: setFontHeaders }));
+app.use('/fonts', express.static(path.join(__dirname, 'public', 'oun'), { setHeaders: setFontHeaders }));
 
-app.get('/', (req, res) => res.send('Fonts server is running'));
+// Keep existing KFGQPC mapping
+app.use('/KFGQPC', express.static(path.join(__dirname, 'KFGQPC'), { setHeaders: setFontHeaders }));
+
+// Serve repository root static files (index.html will be served automatically)
+app.use(express.static(path.join(__dirname)));
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Listening on ${port}`));
