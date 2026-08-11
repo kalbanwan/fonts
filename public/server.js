@@ -11,22 +11,17 @@ function setFontHeaders(res, filePath) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 }
 
-// Static mounts for backwards compatibility
-app.use('/fonts', express.static(path.join(__dirname, 'oun'), { setHeaders: setFontHeaders }));
-app.use('/fonts', express.static(path.join(__dirname, 'public', 'oun'), { setHeaders: setFontHeaders }));
-app.use('/KFGQPC', express.static(path.join(__dirname, 'KFGQPC'), { setHeaders: setFontHeaders }));
+app.use('/KFGQPC', express.static(path.join(__dirname, '..', 'KFGQPC'), { setHeaders: setFontHeaders }));
 
-// Dynamic route: /{name}/{filepath...}
 app.get('/:name/*', (req, res) => {
   const name = req.params.name;
-  const rel = req.params[0]; // the wildcard part after the name
+  const rel = req.params[0];
   const candidates = [
-    path.join(__dirname, name, rel),               // repo-root/name/...
-    path.join(__dirname, 'public', name, rel),     // repo-root/public/name/...
-    path.join(__dirname, 'oun', rel),              // repo-root/oun/...
-    path.join(__dirname, 'public', 'oun', rel)     // repo-root/public/oun/...
+    path.join(__dirname, name, rel),               // public/name/...
+    path.join(__dirname, '..', name, rel),        // repo-root/name/...
+    path.join(__dirname, 'oun', rel),              // public/oun/...
+    path.join(__dirname, '..', 'oun', rel)         // repo-root/oun/...
   ];
-
   for (const p of candidates) {
     if (fs.existsSync(p) && fs.statSync(p).isFile()) {
       setFontHeaders(res, p);
@@ -36,7 +31,6 @@ app.get('/:name/*', (req, res) => {
   return res.status(404).send('Not found');
 });
 
-// Serve repository root static files (index.html)
 app.use(express.static(path.join(__dirname)));
 
 const port = process.env.PORT || 3000;
